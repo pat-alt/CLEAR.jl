@@ -91,3 +91,15 @@ function target_probs(
     end
     return p_target
 end
+
+"""
+    target_encoded(ce::CounterfactualExplanation, data::CounterfactualData)
+
+Returns the encoded representation of `ce.target`.
+"""
+function target_encoded(ce::CounterfactualExplanation, data::CounterfactualData)
+    return ce.target_encoded
+end
+
+target_encoded(ce::CounterfactualExplanation) = target_encoded(ce, ce.data)
+
