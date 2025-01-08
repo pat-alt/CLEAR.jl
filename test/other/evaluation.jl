@@ -176,14 +176,13 @@ end
         gravi;
         initialization=:identity,
         convergence=conv,
-    );
+    )
 
     @testset "MMD" begin
-
         using CounterfactualExplanations.Evaluation: kernelsum
 
         mmd = MMD()
-        @test kernelsum(mmd.kernel, counterfactual_data.X[:,1]) == 0.0
+        @test kernelsum(mmd.kernel, counterfactual_data.X[:, 1]) == 0.0
         @test mmd(counterfactual_data.X, counterfactual_data.X)[2] > 0.5
 
         mmd_generic = mmd(ces, counterfactual_data, n_individuals)
@@ -191,5 +190,4 @@ end
 
         @test mmd_gravi[1] < mmd_generic[1]
     end
-    
 end

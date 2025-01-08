@@ -46,12 +46,7 @@ end
 
 Computes the MMD between two datasets `x` and `y`, along with a p-value based on a null distribution of MMD values (unless `compute_p=nothing`) for a random subset of the data (of sample size `n`). The p-value is computed using a permutation test.
 """
-function (m::MMD)(
-    x::AbstractArray,
-    y::AbstractArray,
-    n::Int;
-    kwrgs...
-)
+function (m::MMD)(x::AbstractArray, y::AbstractArray, n::Int; kwrgs...)
     n = minimum([size(x, 2), n])
     return m(samplecolumns(x, n), samplecolumns(y, n); kwrgs...)
 end
@@ -76,7 +71,7 @@ function mmd_null_dist(
     n = size(x, 2)
     mmd_null = zeros(l)
     Z = hcat(x, y)
-    Zs = [Z[:, shuffle(1:end)] for i in 1:l]     
+    Zs = [Z[:, shuffle(1:end)] for i in 1:l]
 
     bootstrap = function (z)
         return MMD(k)(z[:, 1:n], z[:, (n + 1):end]; compute_p=nothing)[1]

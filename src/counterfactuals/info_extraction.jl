@@ -102,4 +102,3 @@ function target_encoded(ce::CounterfactualExplanation, data::CounterfactualData)
 end
 
 target_encoded(ce::CounterfactualExplanation) = target_encoded(ce, ce.data)
-
