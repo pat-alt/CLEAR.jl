@@ -1,5 +1,8 @@
 module CounterfactualExplanations
 
+# Alias for convenience:
+const CE = CounterfactualExplanations
+
 # Package extensions:
 using PackageExtensionCompat: PackageExtensionCompat, @require_extensions
 function __init__()

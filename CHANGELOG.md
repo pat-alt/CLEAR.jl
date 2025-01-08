@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Note*: We try to adhere to these practices as of version [v1.1.1].
 
-## Version [1.4.2] - 2025-01-02
+## Version [1.4.4] - 2025-01-08
+
+### Added
+
+- Added preliminary support for divergence metrics that can be used to evaluate counterfactuals with respect to target distributions. 
+- 
+## Version [1.4.3] - 2025-01-02
 
 ### Changed
 

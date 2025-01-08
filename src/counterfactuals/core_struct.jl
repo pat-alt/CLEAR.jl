@@ -21,14 +21,14 @@ mutable struct CounterfactualExplanation <: AbstractCounterfactualExplanation
 end
 
 # Aliases
-const CE = CounterfactualExplanation
-function Base.getproperty(ce::CE, sym::Symbol)
+const FullCE = CounterfactualExplanation
+function Base.getproperty(ce::FullCE, sym::Symbol)
     sym = sym === :x ? :factual : sym
     sym = sym === :s′ ? :counterfactual_state : sym
     sym = sym === :x′ ? :counterfactual : sym
     return Base.getfield(ce, sym)
 end
-function Base.setproperty!(ce::CE, sym::Symbol, val)
+function Base.setproperty!(ce::FullCE, sym::Symbol, val)
     sym = sym === :x ? :factual : sym
     sym = sym === :s′ ? :counterfactual_state : sym
     sym = sym === :x′ ? :counterfactual : sym

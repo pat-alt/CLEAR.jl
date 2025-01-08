@@ -1,3 +1,4 @@
+using CounterfactualExplanations.Convergence
 using CounterfactualExplanations.Evaluation:
     Benchmark, evaluate, validity, distance_measures, concatenate_benchmarks
 using CounterfactualExplanations.Objectives: distance
@@ -146,4 +147,34 @@ end
     global_ce_transform(IdentityTransformer())
     x = 1
     @test get_global_ce_transform()(x) == x     # identity function
+end
+
+@testset "Divergence" begin
+    n_individuals = 100
+    ids = rand(findall(predict_label(M, counterfactual_data) .== factual), n_individuals)
+    xs = select_factual(counterfactual_data, ids)
+    conv = MaxIterConvergence(10)
+
+    # Generic counterfactuals:
+    ces = generate_counterfactual(
+        xs,
+        target,
+        counterfactual_data,
+        M,
+        generator;
+        initialization=:identity,
+        convergence=conv,
+    )
+
+    @testset "MMD" begin
+        using CounterfactualExplanations.Evaluation: kernelsum
+
+        mmd = MMD()
+        @test kernelsum(mmd.kernel, counterfactual_data.X[:, 1]) == 0.0
+        @test mmd(counterfactual_data.X, counterfactual_data.X)[2] > 0.5
+
+        mmd_generic = mmd(ces, counterfactual_data, n_individuals)
+
+        @test true
+    end
 end
