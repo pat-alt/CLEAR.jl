@@ -2,7 +2,7 @@
 using KernelFunctions
 using Random: shuffle
 
-export MMD, mmd, mmd_null_dist, mmd_significance
+export MMD, mmd_null_dist, mmd_significance
 
 include("kernels.jl")
 
