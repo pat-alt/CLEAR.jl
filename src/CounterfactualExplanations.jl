@@ -22,6 +22,7 @@ export AbstractCounterfactualExplanation
 export AbstractModel
 export AbstractGenerator
 export AbstractConvergence
+export AbstractMeasure
 export AbstractPenalty, PenaltyOrFun
 
 # Global constants:

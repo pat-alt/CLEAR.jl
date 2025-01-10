@@ -7,11 +7,13 @@ using ..Models
 using LinearAlgebra: LinearAlgebra
 using Statistics
 
+abstract type AbstractDivergenceMetric <: AbstractMeasure end
+
 include("serialization.jl")
+include("divergence/divergence.jl")
+include("measures.jl")
 include("benchmark.jl")
 include("evaluate.jl")
-include("measures.jl")
-include("divergence/divergence.jl")
 
 export global_serializer, Serializer, NullSerializer, _serialization_state
 export global_output_identifier, DefaultOutputIdentifier, _output_id, get_global_output_id

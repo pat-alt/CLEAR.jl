@@ -67,6 +67,10 @@ generators = Dict(
     plaus = Evaluation.plausibility_cosine(ce)
     plaus = Evaluation.plausibility_energy_differential(ce)
     @test true
+
+    @testset "Divergence Metrics" begin
+        @test isnan(evaluate(ce; measure=MMD())[1][1])
+    end
 end
 
 @testset "Benchmarking" begin
@@ -125,6 +129,10 @@ end
 
         bmk = vcat(bmks[1], bmks[2]; ids=collect(keys(datasets)))
         @test typeof(bmk) <: Benchmark
+    end
+
+    @testse "Divergence" begin
+        @test all(isnan.(benchmark(ces; measure=MMD())().value))
     end
 end
 

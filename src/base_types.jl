@@ -16,8 +16,13 @@ Base.broadcastable(gen::AbstractGenerator) = Ref(gen)
 "An abstract type that serves as the base type for convergence objects."
 abstract type AbstractConvergence end
 
+"An abstract type that serves as the base type for measures. Objects of type `AbstractMeasure` need to be callable."
+abstract type AbstractMeasure <: Function end
+
+measure_name(m::Function) = Symbol(m)
+
 "An abstract type for penalty functions."
-abstract type AbstractPenalty end
+abstract type AbstractPenalty <: AbstractMeasure end
 
 "Treat `AbstractPenalty` as scalar when broadcasting."
 Base.broadcastable(pen::AbstractPenalty) = Ref(pen)
