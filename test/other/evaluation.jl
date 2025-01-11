@@ -183,6 +183,9 @@ end
 
         mmd_generic = mmd(ces, counterfactual_data, n_individuals)
 
-        @test true
+        bmk = benchmark(ces; measure=[validity, MMD()]) |>
+            bmk -> compute_divergence(bmk, [validity, MMD(compute_p=nothing)], counterfactual_data)
+        
+        @test all(.!isnan.(bmk.evaluation.value))
     end
 end
