@@ -578,27 +578,25 @@ function compute_divergence(bmk::Benchmark, measure::Union{Function,Vector{<:Fun
         return bmk
     end
     df = innerjoin(bmk.evaluation, bmk.counterfactuals; on=:sample) 
-
-    # Helper function to apply the divergence metric to a dataframe of counterfactual explanations and data
-    function apply_metric(ces,metric, data)
-        ces = collect(ces)
-        val, pval = metric(ces, data)
-        return val, pval
-    end
-
     div_metrics = String.(measure_name.(measure)[isa.(measure, AbstractDivergenceMetric)])
-    df_div = df[findall([x in div_metrics for x in df.variable]),:]
-
-    gdf = groupby(df_div, [:variable, :generator, :model, :target, :factual])
-
-    for (i, metric) in enumerate(measure)
-        if !isa(metric, AbstractDivergenceMetric)
-            continue
+    gdf = groupby(df, [:variable, :generator, :model, :target, :factual]) 
+    final_df = DataFrame()
+    for _df in gdf
+        if !(unique(_df.variable)[1] in div_metrics)
+            _df.pval .= NaN
+        else
+            metric = measure[String.(measure_name.(measure)) .== unique(_df.variable)[1]][1]
+            val, pval = metric(collect(_df.ce), data)
+            _df.value .= val 
+            _df.pval .= pval 
         end
-        df_div = combine(
-            gdf,
-            :ce => (x -> [apply_metric(x, metric, data)]) => [:value,:pval],
-        )
+        first_cols = [:sample, :num_counterfactual, :variable, :value, :pval]
+        select!(df, first_cols, Not(first_cols))
+        final_df = vcat(final_df, _df) 
     end
-    return df_div
+   
+    return Benchmark(
+        final_df,
+        bmk.counterfactuals
+    )
 end
