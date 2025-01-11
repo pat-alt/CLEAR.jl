@@ -16,7 +16,7 @@ struct MMD{K<:KernelFunctions.Kernel} <: AbstractDivergenceMetric
     compute_p::Union{Nothing,Int}
 end
 
-function MMD(;kernel=default_kernel, compute_p=1000)
+function MMD(; kernel=default_kernel, compute_p=1000)
     return MMD(kernel, compute_p)
 end
 
@@ -79,7 +79,7 @@ function mmd_null_dist(
     Zs = [Z[:, shuffle(1:end)] for i in 1:l]
 
     bootstrap = function (z)
-        return MMD(k,nothing)(z[:, 1:n], z[:, (n + 1):end])[1]
+        return MMD(k, nothing)(z[:, 1:n], z[:, (n + 1):end])[1]
     end
 
     mmd_null = map(Zs) do z

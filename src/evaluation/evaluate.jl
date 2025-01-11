@@ -54,7 +54,9 @@ end
 
 For abstract divergence metrics, returns a vector of NaN values.
 """
-compute_measure(ce::CounterfactualExplanation, measure::AbstractDivergenceMetric, agg::Function) = [NaN]
+compute_measure(
+    ce::CounterfactualExplanation, measure::AbstractDivergenceMetric, agg::Function
+) = [NaN]
 
 """
     evaluate_dict(ce::CounterfactualExplanation, measure::Vector{Function}, agg::Function)

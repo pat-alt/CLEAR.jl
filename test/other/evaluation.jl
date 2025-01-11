@@ -1,6 +1,11 @@
 using CounterfactualExplanations.Convergence
 using CounterfactualExplanations.Evaluation:
-    Benchmark, evaluate, validity, distance_measures, concatenate_benchmarks, compute_divergence
+    Benchmark,
+    evaluate,
+    validity,
+    distance_measures,
+    concatenate_benchmarks,
+    compute_divergence
 using CounterfactualExplanations.Objectives: distance
 using Serialization: serialize
 using TaijaData: load_moons, load_circles
@@ -183,9 +188,12 @@ end
 
         mmd_generic = mmd(ces, counterfactual_data, n_individuals)
 
-        bmk = benchmark(ces; measure=[validity, MMD()]) |>
-            bmk -> compute_divergence(bmk, [validity, MMD(compute_p=nothing)], counterfactual_data)
-        
+        bmk =
+            benchmark(ces; measure=[validity, MMD()]) |>
+            bmk -> compute_divergence(
+                bmk, [validity, MMD(; compute_p=nothing)], counterfactual_data
+            )
+
         @test all(.!isnan.(bmk.evaluation.value))
     end
 end

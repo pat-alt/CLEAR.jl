@@ -97,7 +97,6 @@ function benchmark(
     store_ce::Bool=false,
     parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
 )
-
     evaluations = parallelize(
         parallelizer,
         evaluate,
@@ -564,22 +563,24 @@ end
 
 A helper function to determine if counterfactual explanations should be stored based on the given `store_ce` flag and the presence of a divergence metric in the `measure`.
 """
-function needs_ce(store_ce::Bool,measure::Union{Function,Vector{<:Function}})
+function needs_ce(store_ce::Bool, measure::Union{Function,Vector{<:Function}})
     if !store_ce && includes_divergence_metric(measure)
         @warn "Divergence metric detected. Will temporarily store counterfactual explanations, which can lead to increased memory usage."
     end
     return store_ce || includes_divergence_metric(measure)
 end
 
-function compute_divergence(bmk::Benchmark, measure::Union{Function,Vector{<:Function}}, data::CounterfactualData)
+function compute_divergence(
+    bmk::Benchmark, measure::Union{Function,Vector{<:Function}}, data::CounterfactualData
+)
     @assert !isnothing(bmk.counterfactuals) "Cannot compute divergence without counterfactuals. Set `store_ce=true` when running the benchmark."
     if !includes_divergence_metric(measure)
         @info "No divergence metric detected. Skipping computation."
         return bmk
     end
-    df = innerjoin(bmk.evaluation, bmk.counterfactuals; on=:sample) 
+    df = innerjoin(bmk.evaluation, bmk.counterfactuals; on=:sample)
     div_metrics = String.(measure_name.(measure)[isa.(measure, AbstractDivergenceMetric)])
-    gdf = groupby(df, [:variable, :generator, :model, :target, :factual]) 
+    gdf = groupby(df, [:variable, :generator, :model, :target, :factual])
     final_df = DataFrame()
     for _df in gdf
         if !(unique(_df.variable)[1] in div_metrics)
@@ -587,16 +588,13 @@ function compute_divergence(bmk::Benchmark, measure::Union{Function,Vector{<:Fun
         else
             metric = measure[String.(measure_name.(measure)) .== unique(_df.variable)[1]][1]
             val, pval = metric(collect(_df.ce), data)
-            _df.value .= val 
-            _df.pval .= pval 
+            _df.value .= val
+            _df.pval .= pval
         end
         first_cols = [:sample, :num_counterfactual, :variable, :value, :pval]
         select!(df, first_cols, Not(first_cols))
-        final_df = vcat(final_df, _df) 
+        final_df = vcat(final_df, _df)
     end
-   
-    return Benchmark(
-        final_df,
-        bmk.counterfactuals
-    )
+
+    return Benchmark(final_df, bmk.counterfactuals)
 end
