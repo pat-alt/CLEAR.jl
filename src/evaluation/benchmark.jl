@@ -580,20 +580,25 @@ function compute_divergence(bmk::Benchmark, measure::Union{Function,Vector{<:Fun
     df = innerjoin(bmk.evaluation, bmk.counterfactuals; on=:sample) 
 
     # Helper function to apply the divergence metric to a dataframe of counterfactual explanations and data
-    function apply_metric(ces,variable,val,measure,data)
-        metric = measure[measure_name.(measure).==variable]
-        if isa(metric, AbstractDivergenceMetric)
-            ces = collect(ces)
-            val, pval = metric(ces, data)
-            return (fill(val,legth(ces)), fill(pval,length(ces)))
-        else
-            return (val, fill(NaN,length(ces)))
-        end
+    function apply_metric(ces,metric, data)
+        ces = collect(ces)
+        val, pval = metric(ces, data)
+        return val, pval
     end
 
-    df =
-        groupby(df, [:variable, :generator, :model, :target, :factual]) |>
-        gdf ->
-            combine(gdf,[:ce,:variable,:value] => (x -> [apply_metric(x.ce, x.variable, x.value, measure, data)]) => [:value, :pval])
-    return df
+    div_metrics = String.(measure_name.(measure)[isa.(measure, AbstractDivergenceMetric)])
+    df_div = df[findall([x in div_metrics for x in df.variable]),:]
+
+    gdf = groupby(df_div, [:variable, :generator, :model, :target, :factual])
+
+    for (i, metric) in enumerate(measure)
+        if !isa(metric, AbstractDivergenceMetric)
+            continue
+        end
+        df_div = combine(
+            gdf,
+            :ce => (x -> [apply_metric(x, metric, data)]) => [:value,:pval],
+        )
+    end
+    return df_div
 end
