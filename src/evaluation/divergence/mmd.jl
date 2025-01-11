@@ -16,8 +16,6 @@ struct MMD{K<:KernelFunctions.Kernel} <: AbstractDivergenceMetric
     compute_p::Union{Nothing,Int}
 end
 
-MMD() = MMD(default_kernel, 1000)
-
 function MMD(;kernel=default_kernel, compute_p=1000)
     return MMD(kernel, compute_p)
 end

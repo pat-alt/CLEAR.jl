@@ -11,6 +11,9 @@ abstract type AbstractDivergenceMetric <: AbstractMeasure end
 
 include("serialization.jl")
 include("divergence/divergence.jl")
+
+export MMD
+
 include("measures.jl")
 include("benchmark.jl")
 include("evaluate.jl")
@@ -28,6 +31,7 @@ export plausibility_energy_differential,
 export faithfulness
 export plausibility_measures, default_measures, distance_measures, all_measures
 export concatenate_benchmarks
+export compute_divergence
 
 "Available plausibility measures."
 const plausibility_measures = [
