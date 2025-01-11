@@ -1,6 +1,6 @@
 using CounterfactualExplanations.Convergence
 using CounterfactualExplanations.Evaluation:
-    Benchmark, evaluate, validity, distance_measures, concatenate_benchmarks
+    Benchmark, evaluate, validity, distance_measures, concatenate_benchmarks, compute_divergence
 using CounterfactualExplanations.Objectives: distance
 using Serialization: serialize
 using TaijaData: load_moons, load_circles
