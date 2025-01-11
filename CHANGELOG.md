@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Added preliminary support for divergence metrics that can be used to evaluate counterfactuals with respect to target distributions. 
-- 
+
 ## Version [1.4.3] - 2025-01-02
 
 ### Changed
