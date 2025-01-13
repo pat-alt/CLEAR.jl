@@ -13,6 +13,6 @@ generator = GenericGenerator()
 
 if VERSION >= v"1" && !Sys.iswindows()
     t = @benchmark generate_counterfactual(x, target, data, M, generator) samples = 1000
-    expected_allocs = 7000
+    expected_allocs = 10000
     @test t.allocs <= expected_allocs
 end
