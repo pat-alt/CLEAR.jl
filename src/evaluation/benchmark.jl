@@ -587,7 +587,8 @@ function compute_divergence(
             _df.pval .= NaN
         else
             metric = measure[String.(measure_name.(measure)) .== unique(_df.variable)[1]][1]
-            ces = collect(_df.ce) |>
+            ces =
+                collect(_df.ce) |>
                 ces -> [convert(AbstractCounterfactualExplanation, ce) for ce in ces]
             val, pval = metric(ces, data)
             _df.value .= val
