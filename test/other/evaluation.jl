@@ -136,7 +136,7 @@ end
         @test typeof(bmk) <: Benchmark
     end
 
-    @testse "Divergence" begin
+    @testset "Divergence" begin
         @test all(isnan.(benchmark(ces; measure=MMD())().value))
     end
 end
