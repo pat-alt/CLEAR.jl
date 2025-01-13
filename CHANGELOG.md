@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Note*: We try to adhere to these practices as of version [v1.1.1].
 
+## Version [1.4.5] - 2025-01-13
+
+### Changed
+
+- Dispatching `factual` and `counterfactual` over `AbstractCounterfactualExplanation` instead of `CounterfactualExplanation`. [#512]
+- Added type conversion to `compute_divergence`. [#512]
+
 ## Version [1.4.4] - 2025-01-08
 
 ### Added
