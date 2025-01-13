@@ -84,7 +84,7 @@ end
     benchmark(
         counterfactual_explanations::Vector{CounterfactualExplanation};
         meta_data::Union{Nothing,<:Vector{<:Dict}}=nothing,
-        measure::Union{Function,Vector{Function}}=default_measures,
+        measure::Union{Function,Vector{<:Function}}=default_measures,
         store_ce::Bool=false,
     )
 
@@ -93,7 +93,7 @@ Generates a `Benchmark` for a vector of counterfactual explanations. Optionally 
 function benchmark(
     counterfactual_explanations::Vector{CounterfactualExplanation};
     meta_data::Union{Nothing,<:Vector{<:Dict}}=nothing,
-    measure::Union{Function,Vector{Function}}=default_measures,
+    measure::Union{Function,Vector{<:Function}}=default_measures,
     store_ce::Bool=false,
     parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
 )
@@ -105,7 +105,7 @@ function benchmark(
         measure=measure,
         report_each=true,
         report_meta=true,
-        store_ce=store_ce,
+        store_ce=needs_ce(store_ce, measure),
         output_format=:DataFrame,
     )
     bmk = Benchmark(reduce(vcat, evaluations))
@@ -119,7 +119,7 @@ end
         data::CounterfactualData;
         models::Dict{<:Any,<:AbstractModel},
         generators::Dict{<:Any,<:AbstractGenerator},
-        measure::Union{Function,Vector{Function}}=default_measures,
+        measure::Union{Function,Vector{<:Function}}=default_measures,
         xids::Union{Nothing,AbstractArray}=nothing,
         dataname::Union{Nothing,Symbol,String}=nothing,
         verbose::Bool=true,
@@ -136,7 +136,7 @@ function benchmark(
     data::CounterfactualData;
     models::Dict{<:Any,<:AbstractModel},
     generators::Dict{<:Any,<:AbstractGenerator},
-    measure::Union{Function,Vector{Function}}=default_measures,
+    measure::Union{Function,Vector{<:Function}}=default_measures,
     dataname::Union{Nothing,Symbol,String}=nothing,
     verbose::Bool=true,
     store_ce::Bool=false,
@@ -201,7 +201,7 @@ function benchmark(
         measure=measure,
         report_each=true,
         report_meta=true,
-        store_ce=store_ce,
+        store_ce=needs_ce(store_ce, measure),
         output_format=:DataFrame,
         verbose=verbose,
     )
@@ -233,7 +233,7 @@ end
         test_data::Union{Nothing,CounterfactualData}=nothing,
         models::Dict{<:Any,<:Any}=standard_models_catalogue,
         generators::Union{Nothing,Dict{<:Any,<:AbstractGenerator}}=nothing,
-        measure::Union{Function,Vector{Function}}=default_measures,
+        measure::Union{Function,Vector{<:Function}}=default_measures,
         n_individuals::Int=5,
         n_runs::Int=1,
         suppress_training::Bool=false,
@@ -256,7 +256,7 @@ Benchmark a set of counterfactuals for a given data set and additional inputs.
 - `test_data::Union{Nothing,CounterfactualData}`: Optional test data for evaluation. Defaults to `nothing`, in which case `data` is used for evaluation. 
 - `models::Dict{<:Any,<:Any}`: A dictionary of model objects keyed by their names. Defaults to `standard_models_catalogue`.
 - `generators::Union{Nothing,Dict{<:Any,<:AbstractGenerator}}`: Optional dictionary of generator functions keyed by their names. Defaults to `nothing`, in which case the whole [`generator_catalogue`](@ref) is used. 
-- `measure::Union{Function,Vector{Function}}`: The measure(s) to evaluate the counterfactuals against. Defaults to `default_measures`.
+- `measure::Union{Function,Vector{<:Function}}`: The measure(s) to evaluate the counterfactuals against. Defaults to `default_measures`.
 - `n_individuals::Int=5`: Number of individuals to generate for each model and generator. 
 - `n_runs::Int=1`: Number of runs for each model and generator.
 - `suppress_training::Bool=false`: Whether to suppress training of models during benchmarking. This is useful if models have already been trained.
@@ -291,7 +291,7 @@ function benchmark(
     test_data::Union{Nothing,CounterfactualData}=nothing,
     models::Dict{<:Any,<:Any}=standard_models_catalogue,
     generators::Union{Nothing,Dict{<:Any,<:AbstractGenerator}}=nothing,
-    measure::Union{Function,Vector{Function}}=default_measures,
+    measure::Union{Function,Vector{<:Function}}=default_measures,
     n_individuals::Int=5,
     n_runs::Int=1,
     suppress_training::Bool=false,
@@ -471,7 +471,7 @@ function benchmark(
                 measure=measure,
                 report_each=true,
                 report_meta=true,
-                store_ce=store_ce,
+                store_ce=needs_ce(store_ce, measure),
                 output_format=:DataFrame,
             )
 
@@ -543,4 +543,58 @@ function get_benchmark_files(storage_path::String)
     end
 
     return bmk_files
+end
+
+"""
+    includes_divergence_metric(measure::Union{Function,Vector{<:Function}})
+
+Checks if the provided `measure` includes a divergence metric.
+"""
+function includes_divergence_metric(measure::Union{Function,Vector{<:Function}})
+    if isa(measure, Function)
+        return isa(measure, AbstractDivergenceMetric)
+    else
+        return any(isa(m, AbstractDivergenceMetric) for m in measure)
+    end
+end
+
+"""
+    needs_ce(store_ce::Bool,measure::Union{Function,Vector{<:Function}})
+
+A helper function to determine if counterfactual explanations should be stored based on the given `store_ce` flag and the presence of a divergence metric in the `measure`.
+"""
+function needs_ce(store_ce::Bool, measure::Union{Function,Vector{<:Function}})
+    if !store_ce && includes_divergence_metric(measure)
+        @warn "Divergence metric detected. Will temporarily store counterfactual explanations, which can lead to increased memory usage."
+    end
+    return store_ce || includes_divergence_metric(measure)
+end
+
+function compute_divergence(
+    bmk::Benchmark, measure::Union{Function,Vector{<:Function}}, data::CounterfactualData
+)
+    @assert !isnothing(bmk.counterfactuals) "Cannot compute divergence without counterfactuals. Set `store_ce=true` when running the benchmark."
+    if !includes_divergence_metric(measure)
+        @info "No divergence metric detected. Skipping computation."
+        return bmk
+    end
+    df = innerjoin(bmk.evaluation, bmk.counterfactuals; on=:sample)
+    div_metrics = String.(measure_name.(measure)[isa.(measure, AbstractDivergenceMetric)])
+    gdf = groupby(df, [:variable, :generator, :model, :target, :factual])
+    final_df = DataFrame()
+    for _df in gdf
+        if !(unique(_df.variable)[1] in div_metrics)
+            _df.pval .= NaN
+        else
+            metric = measure[String.(measure_name.(measure)) .== unique(_df.variable)[1]][1]
+            val, pval = metric(collect(_df.ce), data)
+            _df.value .= val
+            _df.pval .= pval
+        end
+        first_cols = [:sample, :num_counterfactual, :variable, :value, :pval]
+        select!(df, first_cols, Not(first_cols))
+        final_df = vcat(final_df, _df)
+    end
+
+    return Benchmark(final_df, bmk.counterfactuals)
 end

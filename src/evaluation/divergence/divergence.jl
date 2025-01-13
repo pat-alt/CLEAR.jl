@@ -1,8 +1,6 @@
 using CounterfactualExplanations
 using CounterfactualExplanations: counterfactual
 
-abstract type AbstractDivergenceMetric end
-
 include("mmd.jl")
 
 function get_samples_for_metric(

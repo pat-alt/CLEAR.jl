@@ -13,25 +13,30 @@ Concrete type for the Maximum Mean Discrepancy (MMD) metric.
 """
 struct MMD{K<:KernelFunctions.Kernel} <: AbstractDivergenceMetric
     kernel::K
+    compute_p::Union{Nothing,Int}
 end
 
-MMD() = MMD(default_kernel)
+function MMD(; kernel=default_kernel, compute_p=1000)
+    return MMD(kernel, compute_p)
+end
+
+CounterfactualExplanations.measure_name(m::MMD) = :mmd
 
 """
     (m::MMD)(x::AbstractArray, y::AbstractArray)
 
 Computes the maximum mean discrepancy (MMD) between two datasets `x` and `y`. The MMD is a measure of the difference between two probability distributions. It is defined as the maximum value of the kernelized dot product between the two datasets. It is computed as the sum of average kernel values between columns (samples) of `x` and `y`, minus twice the average kernel value between columns (samples) of `x` and `y`. A larger MMD value indicates that the distributions are more different, while a value closer to zero suggests they are more similar. See also [`kernelsum`](@ref).
 """
-function (m::MMD)(x::AbstractArray, y::AbstractArray; compute_p::Union{Nothing,Int}=1000)
+function (m::MMD)(x::AbstractArray, y::AbstractArray)
     xx = kernelsum(m.kernel, x)
     yy = kernelsum(m.kernel, y)
     xy = kernelsum(m.kernel, x, y)
     mmd = xx + yy - 2xy
-    if !isnothing(compute_p)
-        mmd_null = mmd_null_dist(x, y, m.kernel; l=compute_p)
+    if !isnothing(m.compute_p)
+        mmd_null = mmd_null_dist(x, y, m.kernel; l=m.compute_p)
         p_val = mmd_significance(mmd, mmd_null)
     else
-        p_val = nothing
+        p_val = NaN
     end
     return mmd, p_val
 end
@@ -44,7 +49,7 @@ end
         kwrgs...
     )
 
-Computes the MMD between two datasets `x` and `y`, along with a p-value based on a null distribution of MMD values (unless `compute_p=nothing`) for a random subset of the data (of sample size `n`). The p-value is computed using a permutation test.
+Computes the MMD between two datasets `x` and `y`, along with a p-value based on a null distribution of MMD values (unless `m.compute_p=nothing`) for a random subset of the data (of sample size `n`). The p-value is computed using a permutation test.
 """
 function (m::MMD)(x::AbstractArray, y::AbstractArray, n::Int; kwrgs...)
     n = minimum([size(x, 2), n])
@@ -74,7 +79,7 @@ function mmd_null_dist(
     Zs = [Z[:, shuffle(1:end)] for i in 1:l]
 
     bootstrap = function (z)
-        return MMD(k)(z[:, 1:n], z[:, (n + 1):end]; compute_p=nothing)[1]
+        return MMD(k, nothing)(z[:, 1:n], z[:, (n + 1):end])[1]
     end
 
     mmd_null = map(Zs) do z

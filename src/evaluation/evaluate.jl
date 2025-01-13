@@ -1,3 +1,4 @@
+using CounterfactualExplanations: measure_name
 using DataFrames: nrow
 using UUIDs: uuid1
 
@@ -49,6 +50,15 @@ function compute_measure(ce::CounterfactualExplanation, measure::Function, agg::
 end
 
 """
+    compute_measure(ce::CounterfactualExplanation, measure::AbstractDivergenceMetric, agg::Function)
+
+For abstract divergence metrics, returns a vector of NaN values.
+"""
+compute_measure(
+    ce::CounterfactualExplanation, measure::AbstractDivergenceMetric, agg::Function
+) = [NaN]
+
+"""
     evaluate_dict(ce::CounterfactualExplanation, measure::Vector{Function}, agg::Function)
 Evaluates a counterfactual explanation and returns a dictionary of evaluation measures.
 """
@@ -83,7 +93,7 @@ function to_dataframe(
     evaluation = DataFrames.DataFrame(
         Dict(
             m => report_each ? val[1] : val for
-            (m, val) in zip(Symbol.(measure), computed_measures)
+            (m, val) in zip(measure_name.(measure), computed_measures)
         ),
     )
     evaluation.num_counterfactual = 1:nrow(evaluation)
@@ -128,7 +138,7 @@ end
     evaluate(
         ce::CounterfactualExplanation,
         meta_data::Union{Nothing,Dict}=nothing;
-        measure::Union{Function,Vector{Function}}=default_measures,
+        measure::Union{Function,Vector{<:Function}}=default_measures,
         agg::Function=mean,
         report_each::Bool=false,
         output_format::Symbol=:Vector,
@@ -155,7 +165,7 @@ Just computes evaluation `measures` for the counterfactual explanation. By defau
 function evaluate(
     ce::CounterfactualExplanation,
     meta_data::Union{Nothing,Dict}=nothing;
-    measure::Union{Function,Vector{Function}}=default_measures,
+    measure::Union{Function,Vector{<:Function}}=default_measures,
     agg::Function=mean,
     report_each::Bool=false,
     output_format::Symbol=:Vector,
