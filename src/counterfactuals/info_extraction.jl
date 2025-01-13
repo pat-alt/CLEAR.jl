@@ -1,9 +1,9 @@
 """
-    factual(ce::CounterfactualExplanation)
+    factual(ce::AbstractCounterfactualExplanation)
 
 A convenience method to retrieve the factual `x`.
 """
-function factual(ce::CounterfactualExplanation)
+function factual(ce::AbstractCounterfactualExplanation)
     return ce.factual
 end
 
@@ -29,11 +29,11 @@ function factual_label(ce::CounterfactualExplanation)
 end
 
 """
-    counterfactual(ce::CounterfactualExplanation)
+    counterfactual(ce::AbstractCounterfactualExplanation)
 
 A convenience method that returns the counterfactual.
 """
-function counterfactual(ce::CounterfactualExplanation)
+function counterfactual(ce::AbstractCounterfactualExplanation)
     return ce.counterfactual
 end
 
