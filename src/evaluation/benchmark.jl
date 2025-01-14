@@ -1,5 +1,6 @@
 using Base.Iterators
 using DataFrames: DataFrames
+using Random
 using Serialization: Serialization
 using Statistics: mean
 using TaijaBase: AbstractParallelizer, vectorize_collection, parallelize
@@ -571,7 +572,7 @@ function needs_ce(store_ce::Bool, measure::Union{Function,Vector{<:Function}})
 end
 
 function compute_divergence(
-    bmk::Benchmark, measure::Union{Function,Vector{<:Function}}, data::CounterfactualData
+    bmk::Benchmark, measure::Union{Function,Vector{<:Function}}, data::CounterfactualData; nsamples::Union{Nothing,Int}, rng::AbstractRNG=default_rng()
 )
     @assert !isnothing(bmk.counterfactuals) "Cannot compute divergence without counterfactuals. Set `store_ce=true` when running the benchmark."
     if !includes_divergence_metric(measure)
@@ -590,7 +591,11 @@ function compute_divergence(
             ces =
                 collect(_df.ce) |>
                 ces -> [convert(AbstractCounterfactualExplanation, ce) for ce in ces]
-            val, pval = metric(ces, data)
+            if isnothing(nsamples)
+                val, pval = metric(ces, data)
+            else
+                val, pval = metric(ces, data, nsamples; rng=rng)
+            end
             _df.value .= val
             _df.pval .= pval
         end
