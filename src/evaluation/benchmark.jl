@@ -572,7 +572,11 @@ function needs_ce(store_ce::Bool, measure::Union{Function,Vector{<:Function}})
 end
 
 function compute_divergence(
-    bmk::Benchmark, measure::Union{Function,Vector{<:Function}}, data::CounterfactualData; nsamples::Union{Nothing,Int}=nothing, rng::AbstractRNG=default_rng()
+    bmk::Benchmark,
+    measure::Union{Function,Vector{<:Function}},
+    data::CounterfactualData;
+    nsamples::Union{Nothing,Int}=nothing,
+    rng::AbstractRNG=Random.default_rng(),
 )
     @assert !isnothing(bmk.counterfactuals) "Cannot compute divergence without counterfactuals. Set `store_ce=true` when running the benchmark."
     if !includes_divergence_metric(measure)
