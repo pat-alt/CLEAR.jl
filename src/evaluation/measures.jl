@@ -1,3 +1,4 @@
+using CounterfactualExplanations.Convergence: threshold_reached
 using Statistics: Statistics
 
 include("faithfulness/faithfulness.jl")
@@ -8,9 +9,16 @@ include("plausibility/plausibility.jl")
 
 Checks of the counterfactual search has been successful in that the predicted label corresponds to the specified target. In case multiple counterfactuals were generated, the function returns the proportion of successful counterfactuals.
 """
-function validity(ce::CounterfactualExplanation; agg=Statistics.mean, γ=0.5)
-    val = agg(CounterfactualExplanations.counterfactual_label(ce) .== ce.target)
-    val = val isa LinearAlgebra.AbstractMatrix ? vec(val) : val
+function validity(
+    ce::CounterfactualExplanation;
+    agg=Statistics.mean,
+    threshold::Union{Nothing,AbstractFloat}=nothing,
+)
+    val = if isnothing(threshold)
+        agg(CounterfactualExplanations.counterfactual_label(ce) .== ce.target)
+    else
+        threshold_reached(ce) |> x -> float.(x)
+    end
     return val
 end
 
@@ -20,7 +28,7 @@ end
 Checks if the counterfactual search has been strictly valid in the sense that it has converged with respect to the pre-specified target probability `γ`.
 """
 function validity_strict(ce::CounterfactualExplanation)
-    return validity(ce; γ=ce.convergence.decision_threshold)
+    return validity(ce; threshold=ce.convergence.decision_threshold)
 end
 
 """
