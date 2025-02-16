@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## Version [1.4.6] - 2025-01-14
 
+### Added
+
+- Added an optional `callback::Union{Nothing,Function}` argument to `generate_counterfactual` to allow users to either display or store anything relevant from the full `CounterfactualExplanation` object. This is useful if the user has specified `return_flattened=true` but still needs something specific from `CounterfactualExplanation` that is not returned with `FlattenedCE`.
+
 ### Changed 
 
 - Small bug fix for `validity` function.
