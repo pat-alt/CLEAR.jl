@@ -138,6 +138,9 @@ function generate_counterfactual(
         callback(ce)
     end
 
+    # Convergence:
+    ce.search[:converged] = converged(ce)
+
     # Return full or flattened explanation:
     return output(ce)
 end
