@@ -23,12 +23,12 @@ function validity(
 end
 
 """
-    validity_strict(ce::CounterfactualExplanation)
+    validity_strict(ce::CounterfactualExplanation; kwrgs...)
 
 Checks if the counterfactual search has been strictly valid in the sense that it has converged with respect to the pre-specified target probability `γ`.
 """
-function validity_strict(ce::CounterfactualExplanation)
-    return validity(ce; threshold=ce.convergence.decision_threshold)
+function validity_strict(ce::CounterfactualExplanation; kwrgs...)
+    return validity(ce; threshold=ce.convergence.decision_threshold, kwrgs...)
 end
 
 """
